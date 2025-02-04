@@ -98,26 +98,71 @@ def display_intro():
     print("\n" + color_text("To quit the game, type 'Quit'.", bcolors.OKBLUE))
 
     # Brief pause
-    time.sleep(1)
+    # time.sleep(1)
     user_input = input()
     if user_input.lower().startswith('q'):
         sys.exit()
     else:
         clear_screen()
-        slow_print("Please select which symbol you would like to play as: X or O")
+        print("Please select which symbol you would like to play as: X or O")
         symbol = input()
         if symbol.lower() == 'x':
             player_symbol = 'X'
             computer_symbol = 'O'
         else:
             player_symbol = 'O'
-            computer_symbol = 'X'
-        print(f"Player symbol: {player_symbol}")
-
+            computer_symbol = 'X'            
+        board = get_new_board()
+        initiate_board(board)
+        # TODO: need to define who starts, but for now let's assume player starts
+        players_turn(board, player_symbol)
+        draw_board(board)
 # /end Display methods
 
-board = get_new_board()
-initiate_board(board)
+def players_turn(board, player_symbol):
+    print(f"Player's turn ({player_symbol})")
+    draw_board(board)
+    print("Enter your move: ")
+    
+    while True:
+        try:
+            move = handle_move_input(input())
+            if is_valid_move(board, move):
+                break
+            else:
+                print(color_text("Invalid move. Please enter a valid move within the board values.", bcolors.FAIL))
+        except ValueError:
+            print(color_text("Invalid input format. Please enter row and column separated by a space.", bcolors.FAIL))
+    
+    make_move(board, move[0], move[1], player_symbol)
+    return board
+
+def handle_move_input(input):
+    if input.lower().startswith('q'):
+        sys.exit()
+    x, y = input.split()
+    x = int(x) - 1
+    y = int(y) - 1
+    return x, y
+
+def make_move(board, x, y, symbol):
+    board[y][x] = symbol
+    return board
+
+def is_valid_move(board, move):
+    if len(move) != 2:
+        return False
+    row, col = move
+    if not (0 <= row < len(board) and 0 <= col < len(board[0])):
+        return False
+    if board[row][col] != ' ':
+        return False
+    return True
+
+def available_moves(board, symbol):
+    moves = []
+    # define valid available moves
+
+
 display_intro()
-draw_board(board)
 
