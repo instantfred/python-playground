@@ -87,7 +87,7 @@ def slow_print(text, delay=0.03):
         time.sleep(delay)
     print()
 
-def display_intro():
+def boot_game():
     clear_screen()
     intro_message()
     
@@ -111,20 +111,17 @@ def display_intro():
             computer_symbol = 'O'
         else:
             player_symbol = 'O'
-            computer_symbol = 'X'            
-        board = get_new_board()
-        initiate_board(board)
-        # TODO: need to define who starts, but for now let's assume player starts
-        players_turn(board, player_symbol)
-        draw_board(board)
+            computer_symbol = 'X'
+    return [player_symbol, computer_symbol]
 # /end Display methods
 
 def players_turn(board, player_symbol):
     print(f"Player's turn ({player_symbol})")
-    draw_board(board)
+    # draw_board(board)
     print("Enter your move: ")
     
     while True:
+        print('Enter your move or type "quit" to end the game.')
         try:
             move = handle_move_input(input())
             x, y = move
@@ -134,12 +131,13 @@ def players_turn(board, player_symbol):
                 print(color_text("Invalid move. Please enter a valid move within the board values.", bcolors.FAIL))
         except ValueError:
             print(color_text("Invalid input format. Please enter row and column separated by a space.", bcolors.FAIL))
-    
+    print("making the move")
     make_move(board, player_symbol, move[0], move[1])
     return board
 
 def handle_move_input(input):
     if input.lower().startswith('q'):
+        print(color_text('Thanks for playing!', bcolors.UNDERLINE))
         sys.exit()
     x, y = input.split()
     x = int(x) - 1
@@ -197,6 +195,61 @@ def is_valid_move(board, tile, xstart, ystart):
         return False
     return tiles_to_flip
 
+def get_valid_moves(board, symbol):
+    valid_moves = []
+    for x in range(WIDTH):
+        for y in range(HEIGHT):
+            if is_valid_move(board, symbol, x, y) != False:
+                valid_moves.append([x, y])
+    return valid_moves
 
-display_intro()
+def print_score(board, player_symbol, computer_symbol):
+    scores = get_score_of_board(board)
+    print(color_text('You: %s points. Computer: %s points.' % (scores[player_symbol], scores[computer_symbol]), bcolors.OKGREEN))
+
+def get_score_of_board(board):
+    xscore = 0
+    oscore = 0
+    for x in range(WIDTH):
+        for y in range(HEIGHT):
+            if board[x][y] == 'X':
+                xscore += 1
+            if board[x][y] == 'O':
+                oscore += 1
+    return {'X':xscore, 'O':oscore}
+
+def pick_initial_player():
+    if random.randint(0, 1) == 0:
+        return 'computer'
+    else:
+        return 'player'
+
+def play_game(player_symbol, computer_symbol):
+    board = get_new_board()
+    initiate_board(board)
+    turn = 'player' #pick_initial_player()
+    clear_screen()
+    print('The ' + turn + ' will go first.')
+
+    while True:
+        player_valid_moves = get_valid_moves(board, player_symbol)
+        computer_valid_moves = get_valid_moves(board, computer_symbol)
+
+        if player_valid_moves == [] and computer_valid_moves == []:
+            return board # No one can move, so end the game.
+
+        elif turn == 'player': # Player's turn
+            if player_valid_moves != []:
+                draw_board(board)
+                print_score(board, player_symbol, computer_symbol)
+
+                players_turn(board, player_symbol)
+            turn = 'computer'
+
+
+def main():
+    player_symbol, computer_symbol = boot_game()
+    play_game(player_symbol, computer_symbol)
+
+main()
 
