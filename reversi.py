@@ -127,14 +127,15 @@ def players_turn(board, player_symbol):
     while True:
         try:
             move = handle_move_input(input())
-            if is_valid_move(board, move):
+            x, y = move
+            if is_valid_move(board, player_symbol, x, y):
                 break
             else:
                 print(color_text("Invalid move. Please enter a valid move within the board values.", bcolors.FAIL))
         except ValueError:
             print(color_text("Invalid input format. Please enter row and column separated by a space.", bcolors.FAIL))
     
-    make_move(board, move[0], move[1], player_symbol)
+    make_move(board, player_symbol, move[0], move[1])
     return board
 
 def handle_move_input(input):
@@ -145,25 +146,56 @@ def handle_move_input(input):
     y = int(y) - 1
     return x, y
 
-def make_move(board, x, y, symbol):
-    board[y][x] = symbol
-    return board
+def make_move(board, symbol, xstart, ystart):
+    tiles_to_flip = is_valid_move(board, symbol, xstart, ystart)
 
-def is_valid_move(board, move):
-    if len(move) != 2:
+    if tiles_to_flip == False:
         return False
-    row, col = move
-    if not (0 <= row < len(board) and 0 <= col < len(board[0])):
-        print(color_text("Move out of board bounds.", bcolors.FAIL))
-        return False
-    if board[row][col] != ' ':
-        print(color_text("Move already played.", bcolors.FAIL))
-        return False
+
+    board[xstart][ystart] = symbol
+    for x, y in tiles_to_flip:
+        board[x][y] = symbol
     return True
 
-def available_moves(board, symbol):
-    moves = []
-    # define valid available moves
+def is_on_board(x, y):
+    return x >= 0 and x <= WIDTH - 1 and y >= 0 and y <= HEIGHT - 1
+
+def is_on_corner(x, y):
+    # Returns True if the position is in one of the four corners.
+    return (x == 0 or x == WIDTH - 1) and (y == 0 or y == HEIGHT - 1)
+
+def is_valid_move(board, tile, xstart, ystart):
+    # Returns False if the player's move on space xstart, ystart is invalid.
+    # If it is a valid move, returns a list of spaces that would become the player's if they made a move here.
+    if not is_on_board(xstart, ystart) or board[xstart][ystart] != ' ':
+        return False
+
+    if tile == 'X':
+        other_tile = 'O'
+    else:
+        other_tile = 'X'
+
+    tiles_to_flip = []
+    for xdirection, ydirection in [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]:
+        x, y = xstart, ystart
+        x += xdirection # First step in the x direction
+        y += ydirection # First step in the y direction
+        while is_on_board(x, y) and board[x][y] == other_tile:
+            # Keep moving in this x & y direction.
+            x += xdirection
+            y += ydirection
+            if is_on_board(x, y) and board[x][y] == tile:
+                # There are pieces to flip over. Go in the reverse direction until we reach the original space, noting all the tiles along the way.
+                while True:
+                    x -= xdirection
+                    y -= ydirection
+                    if x == xstart and y == ystart:
+                        break
+                    tiles_to_flip.append([x, y])
+
+    if len(tiles_to_flip) == 0: # If no tiles were flipped, this is not a valid move.
+        return False
+    return tiles_to_flip
 
 
 display_intro()
