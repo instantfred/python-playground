@@ -154,8 +154,10 @@ def is_valid_move(board, move):
         return False
     row, col = move
     if not (0 <= row < len(board) and 0 <= col < len(board[0])):
+        print(color_text("Move out of board bounds.", bcolors.FAIL))
         return False
     if board[row][col] != ' ':
+        print(color_text("Move already played.", bcolors.FAIL))
         return False
     return True
 
