@@ -116,9 +116,7 @@ def boot_game():
             player_symbol = "O"
             computer_symbol = "X"
     return [player_symbol, computer_symbol]
-
-
-# /end Display methods
+# /end Display method
 
 
 def players_turn(board, player_symbol):
@@ -150,7 +148,26 @@ def players_turn(board, player_symbol):
 
 
 def computers_turn(board, computer_symbol):
-   # pc's logic 
+    print(color_text(f"Computer's turn ({computer_symbol})", bcolors.OKCYAN))
+
+    possible_moves = get_valid_moves(board, computer_symbol)
+    # Always go for a corner if available.
+    for x, y in possible_moves:
+        if is_on_corner(x, y):
+            return [x, y]
+
+    # Find the highest-scoring move possible.
+    best_score = -1
+    for x, y in possible_moves:
+        board_copy = get_board_copy(board)
+        make_move(board_copy, computer_symbol, x, y)
+        score = get_score_of_board(board_copy)[computer_symbol]
+        if score > best_score:
+            best_move = [x, y]
+            best_score = score
+
+    make_move(board, computer_symbol, best_move[0], best_move[1])
+    return board
 
 
 def handle_move_input(input):
@@ -174,6 +191,14 @@ def make_move(board, symbol, xstart, ystart):
         board[x][y] = symbol
     return True
 
+def get_board_copy(board):
+    copy = get_new_board()
+
+    for x in range(WIDTH):
+        for y in range(HEIGHT):
+            copy[x][y] = board[x][y]
+
+    return copy
 
 def is_on_board(x, y):
     return x >= 0 and x <= WIDTH - 1 and y >= 0 and y <= HEIGHT - 1
@@ -268,7 +293,7 @@ def pick_initial_player():
 def play_game(player_symbol, computer_symbol):
     board = get_new_board()
     initiate_board(board)
-    turn = "player"  # pick_initial_player()
+    turn = pick_initial_player()
     clear_screen()
     print("The " + turn + " will go first.")
 
@@ -288,13 +313,16 @@ def play_game(player_symbol, computer_symbol):
             turn = "computer"
         elif turn == "computer":
             if computer_valid_moves:
-                # computers_turn(board, computer_symbol)
+                computers_turn(board, computer_symbol)
                 turn = "player"
 
 
 def main():
     player_symbol, computer_symbol = boot_game()
-    play_game(player_symbol, computer_symbol)
+    result = play_game(player_symbol, computer_symbol)
+
+    draw_board(result)
+    get_score_of_board(result)
 
 
 main()
